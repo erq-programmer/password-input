@@ -1,0 +1,7 @@
+.App {
+  text-align: center;
+}
+
+input[data-blocked='true'] {
+  background-color:grey;
+}
