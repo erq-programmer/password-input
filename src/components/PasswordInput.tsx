@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import './PasswordInput.css'
 
 type PasswordInputProps = {
   password: string;
@@ -7,7 +8,7 @@ type PasswordInputProps = {
 
 const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
   const [blockedInputs, setBlockedInputs] = useState([] as Array<number>);
-  const [allInputs, setallInputs] = useState(Array(32).fill(null) as Array<string>);
+  const [allInputs, setallInputs] = useState(Array(32).fill(undefined) as Array<string>);
   const [passwordObject, setPasswordObject] = useState([] as Array<object>);
 
   const getRandomNumber = (min: number, max: number) => {
@@ -31,20 +32,21 @@ const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
 
   const convertToArrayWithObject = (array: any) => {
     array.forEach((element: string, index: number) => {
-      console.log({'char': element, 'index': index})
+      passwordObject[index+1] = {'char': element, 'index': index+1}; // We have to index+1 to match with allInputs array
     });
+    console.log(passwordObject);
   }
 
   const setBlockedInputsIntoArrayWithObjects: any = useCallback((blockedInputs: any) => {
     blockedInputs.forEach((elementIndex: number) => {
-      // console.log({'char': null, 'index': elementIndex})
+      console.log({'char': null, 'index': elementIndex})
     });
   }, [])
 
 
   const changePasswordToObjectModel: any = useCallback((password: any) => {
     const passwordArray = password.split('');
-    // convertToArrayWithObject(passwordArray);
+    convertToArrayWithObject(passwordArray);
   }, [])
 
   // [
@@ -58,11 +60,33 @@ const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
   //   }
   // ]
 
+  const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    allInputs[index] = e.target.value;
+    console.log(allInputs);
+  }
+
+  const handleSubmit = () => {
+    onSuccess();
+  }
+
   const createInputs = () => {
-    console.log(blockedInputs)
-    return allInputs.map((input, index) => (
-     <input data-blocked={blockedInputs.includes(index + 1) || index > 12 ? true : false} key={index} data-index={index+1} value={index+1}>{input}</input>
-  ))
+    return allInputs.map((input, index) =>{
+      const isDataBlocked = blockedInputs.includes(index + 1) || index >= password.length ? true : false;
+      return (
+        <div className="input-with-index">
+        <input
+          data-blocked={isDataBlocked} 
+          disabled={isDataBlocked} 
+          key={index} 
+          data-index={index+1}
+          onChange={(e) => handleChange(index+1, e)}
+          value={allInputs[index+1]}>
+            {input}
+            
+        </input>
+        <span className="index-number" data-blocked={isDataBlocked}> {index+1}</span>
+      </div>
+    )})
   }
 
   useEffect(() => {
@@ -76,7 +100,8 @@ const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
     <div>
       <h2>Blocked inputs index</h2>
       <ol>{blockedInputs && blockedInputs.map((input, index) => <li key={index}>{input}</li>)}</ol>
-      <div>{createInputs()}</div>
+      <div className="input-block">{createInputs()}</div>
+      <button type="submit" onClick={handleSubmit}>Submit</button>
     </div>
   );
 };

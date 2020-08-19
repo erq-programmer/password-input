@@ -4,10 +4,10 @@ import PasswordInput from './components/PasswordInput';
 
 function App() {
   return (
-    <div className="App">
+    <main className="App">
       <h1>Password Input App</h1>
-      <PasswordInput password={'HelloWorld666'} onSuccess={() => console.log('Correct password, success!')} />
-    </div>
+      <PasswordInput password={'HelloWorld'} onSuccess={() => console.log('Correct password, success!')} />
+    </main>
   );
 }
 
