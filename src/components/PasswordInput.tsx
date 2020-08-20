@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, FC } from 'react';
 import './PasswordInput.css';
 
 type PasswordInputProps = {
@@ -6,10 +6,10 @@ type PasswordInputProps = {
   onSuccess: () => void;
 };
 
-const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
+const PasswordInput: FC<PasswordInputProps> = ({ password, onSuccess }) => {
   const [blockedInputs, setBlockedInputs] = useState([] as Array<number>);
-  const [passwordObject, setPasswordObject] = useState([] as Array<object>);
-  const [passwordFromInput, setPasswordFromInput] = useState([] as Array<object>);
+  // const inputsRef = useRef<HTMLInputElement>(null);
+  const inputsRef = useRef([] as any);
   const allInputs: Array<string> = Array(32).fill(undefined);
 
   const getRandomNumber = (min: number, max: number) => {
@@ -20,10 +20,9 @@ const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
     const passwordLength: number = password.length;
     const randomInputs: Array<number> = [];
     const minRandomInputs: number = 1;
-    const maxRandomInputs: number = passwordLength;
     const maxBlockedInputs: number = getRandomNumber(4, passwordLength / 2); // because we want to get max numbers of index
     while (randomInputs.length < maxBlockedInputs) {
-      const randomIndex = getRandomNumber(minRandomInputs, maxRandomInputs); // because we want to get numbers from 1 - 13(if word 'HelloWorld666'.length = 13)
+      const randomIndex = getRandomNumber(minRandomInputs, passwordLength); // because we want to get numbers from 1 - 13(if word 'HelloWorld666'.length = 13)
       if (!randomInputs.includes(randomIndex)) {
         randomInputs.push(randomIndex);
       }
@@ -31,65 +30,53 @@ const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
     return randomInputs.sort((a, b) => a - b);
   }, [password.length]);
 
-  const changePasswordToObjectModel: any = useCallback((passwordFromProps: any) => {
-    const passwordArray = passwordFromProps.split('');
-    const passwordInObject: any = [];
-    passwordArray.forEach((element: string, index: number) => {
-      passwordInObject[index] = { char: element, index: index + 1 }; // We have to index+1 to match with allInputs array
-    });
-    // console.log(passwordInObject);
-    setPasswordObject(passwordInObject);
-  }, []);
+  const handleSubmit = useCallback(
+    (event) => {
+      event.preventDefault();
+      const isCharCorrect = (item: HTMLInputElement, index: number) => {
+        if (!item.disabled) {
+          return item.value === password[index];
+        }
+        return true;
+      };
 
-  const temporaryObject: any = [];
-
-  const handleChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    temporaryObject.push({ char: e.target.value, index: index });
-  };
-
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    setPasswordFromInput(temporaryObject);
-    console.log(passwordFromInput);
-    onSuccess();
-  };
-
-  const createInputs = () => {
-    return allInputs.map((input, index) => {
-      const isDataBlocked = blockedInputs.includes(index + 1) || index >= password.length ? true : false;
-      return (
-        <div className="input-with-index">
-          <input
-            data-blocked={isDataBlocked}
-            disabled={isDataBlocked}
-            key={index}
-            data-index={index + 1}
-            onChange={(e) => handleChange(index + 1, e)}
-            value={allInputs[index + 1]}
-            type="text"
-          >
-            {input}
-          </input>
-          <span className="index-number" data-blocked={isDataBlocked}>
-            {index + 1}
-          </span>
-        </div>
-      );
-    });
-  };
+      inputsRef.current.every(isCharCorrect)
+        ? onSuccess()
+        : console.error('Password is wrong!');
+    },
+    [password, onSuccess]
+  );
 
   useEffect(() => {
-    const drawingData: any = drawingRandomInputs();
+    const drawingData: Array<number> = drawingRandomInputs();
     setBlockedInputs(drawingData);
-    changePasswordToObjectModel(password);
-    // setBlockedInputsIntoArrayWithObjects(drawingData);
-  }, [drawingRandomInputs, changePasswordToObjectModel, password]);
+  }, [drawingRandomInputs]);
 
   return (
     <div>
-      {console.log('State: ', passwordFromInput)}
       <form onSubmit={handleSubmit} className="input-block">
-        <div className="createInputs">{createInputs()}</div>
+        <ul className="createInputs">
+          {Array.from(allInputs).map((_, index) => {
+            const isDataBlocked =
+              blockedInputs.includes(index) || index >= password.length
+                ? true
+                : false;
+            return (
+              <li key={index} className="input-with-index">
+                <input
+                  disabled={isDataBlocked}
+                  value={allInputs[index]}
+                  ref={(ref) => (inputsRef.current[index] = ref)}
+                  type="text"
+                  minLength={1}
+                  maxLength={1}
+                  required
+                ></input>
+                <span className="index-number">{index}</span>
+              </li>
+            );
+          })}
+        </ul>
         <input className="input-submit" type="submit" value="Submit" />
       </form>
     </div>
