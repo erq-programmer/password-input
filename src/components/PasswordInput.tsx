@@ -47,9 +47,10 @@ const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
     temporaryObject.push({ char: e.target.value, index: index });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
     setPasswordFromInput(temporaryObject);
-    console.log(passwordObject);
+    console.log(passwordFromInput);
     onSuccess();
   };
 
@@ -86,13 +87,11 @@ const PasswordInput = ({ password, onSuccess }: PasswordInputProps) => {
 
   return (
     <div>
-      <h2>Blocked inputs index</h2>
       {console.log('State: ', passwordFromInput)}
-      <ul>{blockedInputs && blockedInputs.map((input, index) => <li key={index}>{input}</li>)}</ul>
-      <div className="input-block">{createInputs()}</div>
-      <button type="submit" onClick={handleSubmit}>
-        Submit
-      </button>
+      <form onSubmit={handleSubmit} className="input-block">
+        <div className="createInputs">{createInputs()}</div>
+        <input className="input-submit" type="submit" value="Submit" />
+      </form>
     </div>
   );
 };
